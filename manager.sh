@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Version of the driver we are downloading
-MODULE_VERSION="9.012.03"
+MODULE_VERSION="9.012.04"
 # Name of the device for which we are downloading the driver
 MODULE_NAME="r8125"
 # Name of the directory in the archive
