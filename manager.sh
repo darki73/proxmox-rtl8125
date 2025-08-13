@@ -1,13 +1,75 @@
 #!/usr/bin/env bash
 
-# Version of the driver we are downloading
-MODULE_VERSION="9.016.00"
+# Realtek r8125 Driver Auto-Installer for Proxmox
+# Automatically selects and installs the correct driver version based on kernel
+# 
+# Tested on: Proxmox VE with kernels 6.1 - 6.14
+# Author: [Zhivolupov Ivan/darki73]
+# License: MIT
+# 
+# Usage: ./manager.sh
+# 
+# Features:
+# - Auto-detects kernel version and selects compatible driver
+# - Handles DKMS registration and module loading
+# - Cleans up old driver versions automatically
+# - Preserves module across kernel updates
+
+# Driver version requirements
+declare -A DRIVER_VERSIONS=(
+    ["9.016.00"]="6.12"
+    ["9.012.04"]="6.1"
+)
+
+# Get current kernel version (major.minor only)
+KERNEL_VERSION=$(uname -r | cut -d'-' -f1 | cut -d'.' -f1,2)
+
+# Function to compare version numbers
+version_ge() {
+    # Returns 0 if $1 >= $2
+    [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$2" ]
+}
+
+# Function to find the best compatible driver version
+find_compatible_driver() {
+    local best_version=""
+    local best_min_kernel=""
+    
+    # Sort versions in descending order and find the newest compatible one
+    for version in $(echo "${!DRIVER_VERSIONS[@]}" | tr ' ' '\n' | sort -rV); do
+        min_kernel="${DRIVER_VERSIONS[$version]}"
+        if version_ge "$KERNEL_VERSION" "$min_kernel"; then
+            best_version="$version"
+            break
+        fi
+    done
+    
+    echo "$best_version"
+}
+
+# Find the best driver version for current kernel
+MODULE_VERSION=$(find_compatible_driver)
+
+if [ -z "$MODULE_VERSION" ]; then
+    echo "ERROR: No compatible r8125 driver found for kernel $KERNEL_VERSION"
+    echo "Available drivers require:"
+    for ver in "${!DRIVER_VERSIONS[@]}"; do
+        echo "  - r8125 $ver requires kernel >= ${DRIVER_VERSIONS[$ver]}"
+    done | sort -V
+    exit 1
+fi
+
 # Name of the device for which we are downloading the driver
 MODULE_NAME="r8125"
+
+echo "Kernel version: $KERNEL_VERSION"
+echo "Selected driver: $MODULE_NAME-$MODULE_VERSION (requires kernel >= ${DRIVER_VERSIONS[$MODULE_VERSION]})"
+
+
 # Name of the directory in the archive
 DIRECTORY_NAME="$MODULE_NAME-$MODULE_VERSION"
 # URL of the driver archive
-DRIVER_DOWNLOAD_URL="https://rtitwww.realtek.com/rtdrivers/cn/nic1/$DIRECTORY_NAME.tar.bz2"
+DRIVER_DOWNLOAD_URL="https://wwwfile.realtek.com/rtdrivers/cn/nic1/$DIRECTORY_NAME.tar.bz2"
 # Save to directory
 SAVE_TO_DIRECTORY="/usr/src"
 
