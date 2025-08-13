@@ -95,7 +95,7 @@ if [ ! -f "/etc/pve/.version" ]; then
 fi
 
 # Download and prepare the driver
-wget -e "on-error=abort" -O "$SAVE_TO_DIRECTORY/$DIRECTORY_NAME.tar.bz2" "$DRIVER_DOWNLOAD_URL" || {
+wget --tries=3 --timeout=30 -O "$SAVE_TO_DIRECTORY/$DIRECTORY_NAME.tar.bz2" "$DRIVER_DOWNLOAD_URL" || {
     echo "Failed to download the driver. Please check the URL or network connectivity."
     exit 1
 }
