@@ -2,13 +2,13 @@
 
 # Realtek r8125 Driver Auto-Installer for Proxmox
 # Automatically selects and installs the correct driver version based on kernel
-# 
+#
 # Tested on: Proxmox VE with kernels 6.1 - 6.14
 # Author: [Zhivolupov Ivan/darki73]
 # License: MIT
-# 
+#
 # Usage: ./manager.sh
-# 
+#
 # Features:
 # - Auto-detects kernel version and selects compatible driver
 # - Handles DKMS registration and module loading
@@ -34,7 +34,7 @@ version_ge() {
 find_compatible_driver() {
     local best_version=""
     local best_min_kernel=""
-    
+
     # Sort versions in descending order and find the newest compatible one
     for version in $(echo "${!DRIVER_VERSIONS[@]}" | tr ' ' '\n' | sort -rV); do
         min_kernel="${DRIVER_VERSIONS[$version]}"
@@ -43,7 +43,7 @@ find_compatible_driver() {
             break
         fi
     done
-    
+
     echo "$best_version"
 }
 
@@ -89,7 +89,7 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-if [ ! -f "/etc/pve/version" ]; then
+if [ ! -f "/etc/pve/.version" ]; then
     echo "This script is intended to be run on a Proxmox environment only."
     exit 1
 fi
